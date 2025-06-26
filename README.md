@@ -1,4 +1,9 @@
-# README
+## 何これ
+簡単なチャットアプリです。
+[このサイト](https://render-fastapi-1czp.onrender.com/)に飛んで、名前と内容を入力すると同サイトを開いているユーザに内容が送信されます。
+
+
+## README
 
 This is the [Express](https://expressjs.com) [Hello world](https://expressjs.com/en/starter/hello-world.html) example on [Render](https://render.com).
 
