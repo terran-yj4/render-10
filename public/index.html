@@ -1,81 +1,52 @@
 <!DOCTYPE html>
 <html lang="ja">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chat App</title>
+    <meta charset="UTF-8">
+    <title>WebSocket チャット</title>
     <style>
-      .chat {
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-      }
-      .messages {
-        flex: 1;
-        overflow-y: auto;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      .form {
-        display: flex;
-      }
-      .input {
-        flex: 1;
-        padding: 10px;
-        border: 1px solid #ccc;
-      }
-      .submit {
-        padding: 10px;
-        border: 1px solid #ccc;
-        background: #eee;
-        cursor: pointer;
-      }
+      body { font-family: sans-serif; background: #f9f9f9; }
+      #chat-box { width: 100%; max-width: 500px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 24px; }
+      #log { list-style: none; padding: 0; margin: 16px 0 0 0; }
+      #log li { padding: 4px 0; border-bottom: 1px solid #eee; }
+      .input-row { display: flex; gap: 8px; margin-top: 12px; }
+      input[type="text"] { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+      button { padding: 8px 16px; border: none; background: #0078d7; color: #fff; border-radius: 4px; cursor: pointer; }
+      button:hover { background: #005fa3; }
     </style>
   </head>
   <body>
-    <div class="chat">
-      <ul class="messages"></ul>
-      <form class="form">
-        <input class="input" autocomplete="off" />
-        <button class="submit">Send</button>
-      </form>
+    <div id="chat-box">
+      <h2>WebSocket チャット</h2>
+      <div class="input-row">
+        <input id="username" type="text" placeholder="ユーザーネーム">
+        <input id="msg" type="text" placeholder="メッセージ入力">
+        <button onclick="sendMsg()">送信</button>
+      </div>
+      <ul id="log"></ul>
     </div>
-
     <script>
-      function main() {
-        const host = location.origin.replace(/^http/, 'ws')
-        const ws = new WebSocket(host + '/ws')
-        const myId = self.crypto.randomUUID().substr(0, 8)
-        const form = document.querySelector('.form')
-
-        form.onsubmit = function (e) {
-          e.preventDefault()
-          const input = document.querySelector('.input')
-          const text = input.value
-          ws.send(JSON.stringify({ id: myId, text }))
-          input.value = ''
-          input.focus()
+      // ws/wss自動切り替え
+      const wsProtocol = location.protocol === "https:" ? "wss://" : "ws://";
+      const ws = new WebSocket(wsProtocol + location.host + "/ws");
+      ws.onmessage = (event) => {
+        try {
+          const { username, message } = JSON.parse(event.data);
+          const li = document.createElement("li");
+          li.textContent = `${username}: ${message}`;
+          document.getElementById("log").appendChild(li);
+        } catch (e) {
+          const li = document.createElement("li");
+          li.textContent = "受信: " + event.data;
+          document.getElementById("log").appendChild(li);
         }
-
-        ws.onmessage = function (msg) {
-          const response = msg.data
-          const messageList = document.querySelector('.messages')
-          const li = document.createElement('li')
-          if (id === myId) {
-            li.textContent = `(${id})自分:` + text
-          } else {
-            li.textContent = id + ': ' + text
-          }
-          messageList.appendChild(li)
-        }
-
-        ws.onerror = function (error) {
-          console.error('WebSocket Error: ', error)
-        }
+      };
+      function sendMsg() {
+        const username = document.getElementById("username").value || "名無し";
+        const message = document.getElementById("msg").value;
+        if (!message) return;
+        ws.send(JSON.stringify({ username, message }));
+        document.getElementById("msg").value = "";
       }
-
-      main()
     </script>
   </body>
 </html>
